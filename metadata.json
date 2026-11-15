@@ -1,0 +1,6 @@
+{
+  "name": "Marea",
+  "description": "Bitácora de pesca deportiva, registro de capturas, zonas favoritas, caja de señuelos y condiciones solunares.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

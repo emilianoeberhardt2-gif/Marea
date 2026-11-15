@@ -1,0 +1,323 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidWaterType(wt) {
+      return wt in ['dulce', 'salada', 'estuario'];
+    }
+
+    function isValidCompetitionWaterType(wt) {
+      return wt in ['todas', 'dulce', 'salada', 'estuario'];
+    }
+
+    function isValidScoringMode(mode) {
+      return mode in ['peso_mayor', 'talla_mayor', 'cantidad'];
+    }
+
+    function isValidTackleCategory(cat) {
+      return cat in ['superficie', 'media_agua', 'fondo', 'mosca', 'carnada'];
+    }
+
+    function isValidCatchLog(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.species is string && data.species.size() >= 1 && data.species.size() <= 60 &&
+             data.weightKg is number && data.weightKg >= 0 && data.weightKg <= 500 &&
+             data.lengthCm is number && data.lengthCm >= 0 && data.lengthCm <= 500 &&
+             isValidWaterType(data.waterType) &&
+             data.released is bool &&
+             data.caughtAtEpochMs is int && data.caughtAtEpochMs > 0 &&
+             (!('lureOrBait' in data) || (data.lureOrBait is string && data.lureOrBait.size() <= 80)) &&
+             (!('spotName' in data) || (data.spotName is string && data.spotName.size() <= 80)) &&
+             (!('weatherSummary' in data) || (data.weatherSummary is string && data.weatherSummary.size() <= 120)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+             (!('photoPath' in data) || (data.photoPath is string && data.photoPath.size() <= 120)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidFishingSpot(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+             isValidWaterType(data.waterType) &&
+             data.rating is int && data.rating >= 1 && data.rating <= 5 &&
+             (!('targetSpecies' in data) || (data.targetSpecies is string && data.targetSpecies.size() <= 120)) &&
+             (!('accessNotes' in data) || (data.accessNotes is string && data.accessNotes.size() <= 500)) &&
+             (!('latitude' in data) || (data.latitude is number && data.latitude >= -90 && data.latitude <= 90)) &&
+             (!('longitude' in data) || (data.longitude is number && data.longitude >= -180 && data.longitude <= 180)) &&
+             (!('photoPaths' in data) || (data.photoPaths is list && data.photoPaths.size() <= 5 && (data.photoPaths.size() == 0 || (data.photoPaths[0] is string && data.photoPaths[0].size() <= 120)))) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidTackleItem(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+             isValidTackleCategory(data.category) &&
+             data.isFavorite is bool &&
+             (!('colorPattern' in data) || (data.colorPattern is string && data.colorPattern.size() <= 60)) &&
+             (!('weightGrams' in data) || (data.weightGrams is number && data.weightGrams >= 0 && data.weightGrams <= 2000)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 300)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAnglerProfile(data, anglerUid) {
+      return data.userId is string && data.userId == anglerUid &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 60 &&
+             data.friendCode is string && data.friendCode.size() >= 4 && data.friendCode.size() <= 16 &&
+             data.discoverable is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidFriendLink(data, userId, friendUid) {
+      return data.userId is string && data.userId == userId &&
+             data.friendUid is string && data.friendUid == friendUid && data.friendUid != userId &&
+             data.friendName is string && data.friendName.size() >= 1 && data.friendName.size() <= 60 &&
+             data.friendCode is string && data.friendCode.size() >= 4 && data.friendCode.size() <= 16 &&
+             data.addedAtEpochMs is int && data.addedAtEpochMs > 0 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidSharedCatch(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.anglerName is string && data.anglerName.size() >= 1 && data.anglerName.size() <= 60 &&
+             data.species is string && data.species.size() >= 1 && data.species.size() <= 60 &&
+             data.weightKg is number && data.weightKg >= 0 && data.weightKg <= 500 &&
+             data.lengthCm is number && data.lengthCm >= 0 && data.lengthCm <= 500 &&
+             (!('lureOrBait' in data) || (data.lureOrBait is string && data.lureOrBait.size() <= 80)) &&
+             (!('spotName' in data) || (data.spotName is string && data.spotName.size() <= 80)) &&
+             isValidWaterType(data.waterType) &&
+             data.released is bool &&
+             data.isShared is bool &&
+             data.caughtAtEpochMs is int && data.caughtAtEpochMs > 0 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidCompetition(data) {
+      return data.creatorUid is string && data.creatorUid.size() >= 1 && data.creatorUid.size() <= 128 &&
+             data.creatorName is string && data.creatorName.size() >= 1 && data.creatorName.size() <= 60 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 80 &&
+             data.targetSpecies is string && data.targetSpecies.size() >= 1 && data.targetSpecies.size() <= 60 &&
+             isValidScoringMode(data.scoringMode) &&
+             isValidCompetitionWaterType(data.waterType) &&
+             data.participantUids is list && data.participantUids.size() >= 2 && data.participantUids.size() <= 10 &&
+             data.creatorUid in data.participantUids &&
+             data.participantLabels is list && data.participantLabels.size() == data.participantUids.size() &&
+             (data.participantLabels[0] is string && data.participantLabels[0].size() <= 80) &&
+             data.status in ['activa', 'finalizada'] &&
+             (!('winnerName' in data) || (data.winnerName is string && data.winnerName.size() <= 80)) &&
+             data.startsAtEpochMs is int && data.startsAtEpochMs > 0 &&
+             data.endsAtEpochMs is int && data.endsAtEpochMs >= data.startsAtEpochMs &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAiDailyQuota(data, userId, dateKey) {
+      return data.userId is string && data.userId == userId &&
+             data.dateKey is string && data.dateKey == dateKey &&
+             data.dateKey.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
+             data.questionsUsed is int && data.questionsUsed >= 0 && data.questionsUsed <= 5 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow read, write: if false;
+
+      match /catches/{catchId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(catchId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(catchId) &&
+                         incoming().keys().hasAll(['userId', 'species', 'weightKg', 'lengthCm', 'waterType', 'released', 'caughtAtEpochMs', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'species', 'weightKg', 'lengthCm', 'lureOrBait', 'spotName', 'waterType', 'weatherSummary', 'released', 'notes', 'photoPath', 'caughtAtEpochMs', 'createdAt', 'updatedAt']) &&
+                         isValidCatchLog(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(catchId) &&
+                         isValidCatchLog(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['species', 'weightKg', 'lengthCm', 'lureOrBait', 'spotName', 'waterType', 'weatherSummary', 'released', 'notes', 'photoPath', 'caughtAtEpochMs', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(catchId);
+      }
+
+      match /spots/{spotId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(spotId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(spotId) &&
+                         incoming().keys().hasAll(['userId', 'name', 'waterType', 'rating', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'name', 'waterType', 'targetSpecies', 'accessNotes', 'latitude', 'longitude', 'rating', 'photoPaths', 'createdAt', 'updatedAt']) &&
+                         isValidFishingSpot(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(spotId) &&
+                         isValidFishingSpot(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'waterType', 'targetSpecies', 'accessNotes', 'latitude', 'longitude', 'rating', 'photoPaths', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(spotId);
+      }
+
+      match /tackle/{tackleId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(tackleId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(tackleId) &&
+                         incoming().keys().hasAll(['userId', 'name', 'category', 'isFavorite', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'name', 'category', 'colorPattern', 'weightGrams', 'notes', 'isFavorite', 'createdAt', 'updatedAt']) &&
+                         isValidTackleItem(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(tackleId) &&
+                         isValidTackleItem(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'colorPattern', 'weightGrams', 'notes', 'isFavorite', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(tackleId);
+      }
+
+      match /friends/{friendUid} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(friendUid);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(friendUid) &&
+                         incoming().keys().hasAll(['userId', 'friendUid', 'friendName', 'friendCode', 'addedAtEpochMs', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'friendUid', 'friendName', 'friendCode', 'addedAtEpochMs', 'createdAt', 'updatedAt']) &&
+                         isValidFriendLink(incoming(), userId, friendUid);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(friendUid) &&
+                         isValidFriendLink(incoming(), userId, friendUid) &&
+                         incoming().userId == existing().userId &&
+                         incoming().friendUid == existing().friendUid &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['friendName', 'friendCode', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(friendUid);
+      }
+
+      match /ai_quota/{dateKey} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(dateKey);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(dateKey) &&
+                         incoming().keys().hasAll(['userId', 'dateKey', 'questionsUsed', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'dateKey', 'questionsUsed', 'createdAt', 'updatedAt']) &&
+                         isValidAiDailyQuota(incoming(), userId, dateKey);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(dateKey) &&
+                         isValidAiDailyQuota(incoming(), userId, dateKey) &&
+                         incoming().userId == existing().userId &&
+                         incoming().dateKey == existing().dateKey &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['questionsUsed', 'updatedAt']);
+
+        allow delete: if false;
+      }
+    }
+
+    match /anglers/{anglerUid} {
+      allow get: if isSignedIn() && isValidId(anglerUid);
+      allow list: if isSignedIn() && resource.data.discoverable == true;
+
+      allow create: if isOwner(anglerUid) &&
+                       isValidId(anglerUid) &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'friendCode', 'discoverable', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'friendCode', 'discoverable', 'createdAt', 'updatedAt']) &&
+                       isValidAnglerProfile(incoming(), anglerUid);
+
+      allow update: if isOwner(anglerUid) &&
+                       isValidId(anglerUid) &&
+                       isValidAnglerProfile(incoming(), anglerUid) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'friendCode', 'discoverable', 'updatedAt']);
+
+      allow delete: if isOwner(anglerUid) && isValidId(anglerUid);
+    }
+
+    match /shared_catches/{catchId} {
+      allow get: if isSignedIn() && isValidId(catchId) && (resource.data.userId == request.auth.uid || resource.data.isShared == true);
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.isShared == true);
+
+      allow create: if isSignedIn() &&
+                       isValidId(catchId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'anglerName', 'species', 'weightKg', 'lengthCm', 'waterType', 'released', 'isShared', 'caughtAtEpochMs', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'anglerName', 'species', 'weightKg', 'lengthCm', 'lureOrBait', 'spotName', 'waterType', 'released', 'isShared', 'caughtAtEpochMs', 'createdAt', 'updatedAt']) &&
+                       isValidSharedCatch(incoming(), request.auth.uid);
+
+      allow update: if isSignedIn() &&
+                       isValidId(catchId) &&
+                       existing().userId == request.auth.uid &&
+                       isValidSharedCatch(incoming(), request.auth.uid) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['anglerName', 'species', 'weightKg', 'lengthCm', 'lureOrBait', 'spotName', 'waterType', 'released', 'isShared', 'caughtAtEpochMs', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(catchId) && existing().userId == request.auth.uid;
+    }
+
+    match /competitions/{competitionId} {
+      allow get: if isSignedIn() && isValidId(competitionId) && (request.auth.uid in existing().participantUids);
+      allow list: if isSignedIn() && (request.auth.uid in resource.data.participantUids);
+
+      allow create: if isSignedIn() &&
+                       isValidId(competitionId) &&
+                       incoming().creatorUid == request.auth.uid &&
+                       incoming().status == 'activa' &&
+                       incoming().keys().hasAll(['creatorUid', 'creatorName', 'title', 'targetSpecies', 'scoringMode', 'waterType', 'participantUids', 'participantLabels', 'status', 'startsAtEpochMs', 'endsAtEpochMs', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['creatorUid', 'creatorName', 'title', 'targetSpecies', 'scoringMode', 'waterType', 'participantUids', 'participantLabels', 'status', 'winnerName', 'startsAtEpochMs', 'endsAtEpochMs', 'createdAt', 'updatedAt']) &&
+                       isValidCompetition(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(competitionId) &&
+                       isValidCompetition(incoming()) &&
+                       existing().status == 'activa' &&
+                       (request.auth.uid == existing().creatorUid || request.auth.uid in existing().participantUids) &&
+                       incoming().creatorUid == existing().creatorUid &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status', 'winnerName', 'endsAtEpochMs', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(competitionId) && existing().creatorUid == request.auth.uid;
+    }
+  }
+}

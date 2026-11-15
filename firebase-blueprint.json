@@ -1,0 +1,181 @@
+{
+  "entities": {
+    "CatchLog": {
+      "title": "CatchLog",
+      "description": "Registro de una captura realizada por el pescador",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del usuario autenticado" },
+        "species": { "type": "string", "description": "Nombre de la especie capturada" },
+        "weightKg": { "type": "number", "description": "Peso en kilogramos" },
+        "lengthCm": { "type": "number", "description": "Longitud en centímetros" },
+        "lureOrBait": { "type": "string", "description": "Señuelo o carnada utilizada" },
+        "spotName": { "type": "string", "description": "Nombre de la zona o lugar de pesca" },
+        "waterType": { "type": "string", "enum": ["dulce", "salada", "estuario"] },
+        "weatherSummary": { "type": "string", "description": "Resumen del clima o marea" },
+        "released": { "type": "boolean", "description": "Indica si fue captura y suelta" },
+        "notes": { "type": "string", "description": "Notas adicionales de la captura" },
+        "photoPath": { "type": "string", "description": "Nombre de archivo local de la foto de captura" },
+        "caughtAtEpochMs": { "type": "integer", "description": "Marca temporal de la captura en milisegundos" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "species", "weightKg", "lengthCm", "waterType", "released", "caughtAtEpochMs", "createdAt", "updatedAt"]
+    },
+    "FishingSpot": {
+      "title": "FishingSpot",
+      "description": "Zona o punto de pesca guardado por el usuario",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del usuario autenticado" },
+        "name": { "type": "string", "description": "Nombre del punto de pesca" },
+        "waterType": { "type": "string", "enum": ["dulce", "salada", "estuario"] },
+        "targetSpecies": { "type": "string", "description": "Especies habituales en el punto" },
+        "accessNotes": { "type": "string", "description": "Descripción y detalles de acceso o marea" },
+        "latitude": { "type": "number", "description": "Latitud GPS opcional" },
+        "longitude": { "type": "number", "description": "Longitud GPS opcional" },
+        "rating": { "type": "integer", "description": "Valoración de 1 a 5" },
+        "photoPaths": { "type": "array", "description": "Lista acotada de nombres de fotos locales (máx 5)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "name", "waterType", "rating", "createdAt", "updatedAt"]
+    },
+    "TackleItem": {
+      "title": "TackleItem",
+      "description": "Señuelo, mosca o carnada en la caja del pescador",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del usuario autenticado" },
+        "name": { "type": "string", "description": "Nombre o modelo del señuelo" },
+        "category": { "type": "string", "enum": ["superficie", "media_agua", "fondo", "mosca", "carnada"] },
+        "colorPattern": { "type": "string", "description": "Color o patrón" },
+        "weightGrams": { "type": "number", "description": "Peso en gramos" },
+        "notes": { "type": "string", "description": "Notas técnicas" },
+        "isFavorite": { "type": "boolean", "description": "Marcado como favorito" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "name", "category", "isFavorite", "createdAt", "updatedAt"]
+    },
+    "AnglerProfile": {
+      "title": "AnglerProfile",
+      "description": "Perfil público sin PII del pescador para amistad y competencias",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del usuario autenticado" },
+        "displayName": { "type": "string", "description": "Nombre visible del pescador" },
+        "friendCode": { "type": "string", "description": "Código corto compartible del pescador" },
+        "discoverable": { "type": "boolean", "description": "Permite aparecer en el directorio de amigos" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "displayName", "friendCode", "discoverable", "createdAt", "updatedAt"]
+    },
+    "FriendLink": {
+      "title": "FriendLink",
+      "description": "Amigo agregado por el usuario para ver capturas y competir",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del dueño de la lista de amigos" },
+        "friendUid": { "type": "string", "description": "UID del pescador amigo" },
+        "friendName": { "type": "string", "description": "Nombre del amigo" },
+        "friendCode": { "type": "string", "description": "Código corto del amigo" },
+        "addedAtEpochMs": { "type": "integer", "description": "Marca temporal en ms" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "friendUid", "friendName", "friendCode", "addedAtEpochMs", "createdAt", "updatedAt"]
+    },
+    "SharedCatch": {
+      "title": "SharedCatch",
+      "description": "Resumen de captura compartida con amigos y competencias",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del autor de la captura" },
+        "anglerName": { "type": "string", "description": "Nombre visible del autor" },
+        "species": { "type": "string", "description": "Especie capturada" },
+        "weightKg": { "type": "number", "description": "Peso en kg" },
+        "lengthCm": { "type": "number", "description": "Longitud en cm" },
+        "lureOrBait": { "type": "string", "description": "Señuelo o carnada" },
+        "spotName": { "type": "string", "description": "Nombre de la zona" },
+        "waterType": { "type": "string", "enum": ["dulce", "salada", "estuario"] },
+        "released": { "type": "boolean", "description": "Captura y suelta" },
+        "isShared": { "type": "boolean", "description": "Visible para amigos y competencias" },
+        "caughtAtEpochMs": { "type": "integer", "description": "Marca temporal de captura en ms" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "anglerName", "species", "weightKg", "lengthCm", "waterType", "released", "isShared", "caughtAtEpochMs", "createdAt", "updatedAt"]
+    },
+    "Competition": {
+      "title": "Competition",
+      "description": "Competencia amistosa entre pescadores seleccionados",
+      "type": "object",
+      "properties": {
+        "creatorUid": { "type": "string", "description": "UID del creador del reto" },
+        "creatorName": { "type": "string", "description": "Nombre del creador" },
+        "title": { "type": "string", "description": "Título de la competencia" },
+        "targetSpecies": { "type": "string", "description": "Especie objetivo o Todas" },
+        "scoringMode": { "type": "string", "enum": ["peso_mayor", "talla_mayor", "cantidad"] },
+        "waterType": { "type": "string", "enum": ["todas", "dulce", "salada", "estuario"] },
+        "participantUids": { "type": "array", "description": "Lista acotada de UIDs participantes (2 a 10)" },
+        "participantLabels": { "type": "array", "description": "Etiquetas uid|nombre de participantes" },
+        "status": { "type": "string", "enum": ["activa", "finalizada"] },
+        "winnerName": { "type": "string", "description": "Ganador al finalizar" },
+        "startsAtEpochMs": { "type": "integer", "description": "Inicio en ms" },
+        "endsAtEpochMs": { "type": "integer", "description": "Fin en ms" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" }
+      },
+      "required": ["creatorUid", "creatorName", "title", "targetSpecies", "scoringMode", "waterType", "participantUids", "participantLabels", "status", "startsAtEpochMs", "endsAtEpochMs", "createdAt", "updatedAt"]
+    },
+    "AiDailyQuota": {
+      "title": "AiDailyQuota",
+      "description": "Control diario de máximo 5 preguntas al asistente de pesca por usuario",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del usuario" },
+        "dateKey": { "type": "string", "description": "Fecha YYYY-MM-DD" },
+        "questionsUsed": { "type": "integer", "description": "Cantidad usada hoy (0..5)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "dateKey", "questionsUsed", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/catches/{catchId}": {
+      "schema": { "$ref": "#/entities/CatchLog" },
+      "description": "Bitácora de capturas privada por usuario"
+    },
+    "/users/{userId}/spots/{spotId}": {
+      "schema": { "$ref": "#/entities/FishingSpot" },
+      "description": "Zonas y marcadores de pesca privados por usuario"
+    },
+    "/users/{userId}/tackle/{tackleId}": {
+      "schema": { "$ref": "#/entities/TackleItem" },
+      "description": "Caja de señuelos y carnadas privada por usuario"
+    },
+    "/users/{userId}/friends/{friendUid}": {
+      "schema": { "$ref": "#/entities/FriendLink" },
+      "description": "Lista de amigos seleccionados por usuario"
+    },
+    "/users/{userId}/ai_quota/{dateKey}": {
+      "schema": { "$ref": "#/entities/AiDailyQuota" },
+      "description": "Cuota diaria de hasta 5 preguntas de IA por usuario"
+    },
+    "/anglers/{anglerUid}": {
+      "schema": { "$ref": "#/entities/AnglerProfile" },
+      "description": "Perfiles públicos sin PII para agregar amigos"
+    },
+    "/shared_catches/{catchId}": {
+      "schema": { "$ref": "#/entities/SharedCatch" },
+      "description": "Capturas compartidas visibles para amigos y competencias"
+    },
+    "/competitions/{competitionId}": {
+      "schema": { "$ref": "#/entities/Competition" },
+      "description": "Competencias amistosas entre pescadores"
+    }
+  }
+}
